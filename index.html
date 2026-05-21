@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lbe</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --panel-width: 220px;
+      --bg: #1a1a1a;
+      --panel-bg: #111;
+      --panel-border: #2a2a2a;
+      --text: #ccc;
+      --text-dim: #555;
+      --accent: #e8e0c8;
+      --palette-cell: 11px;
+      --swatch-size: 18px;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: monospace;
+    }
+
+    #app {
+      display: flex;
+      width: 100%; height: 100%;
+    }
+
+    /* ── Side panel ── */
+    #panel {
+      width: var(--panel-width);
+      min-width: var(--panel-width);
+      height: 100%;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      gap: 20px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .panel-label {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    #panel .logo {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* ── Glyph palette ── */
+    #palette-wrap {
+      width:  calc(var(--palette-cell) * 16 + 1px);
+      height: calc(var(--palette-cell) * 16 + 1px);
+      flex-shrink: 0;
+    }
+
+    #palette-canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    #colour-grid { display: flex; flex-direction: column; gap: 2px; }
+
+    /* ── Colour swatches ── */
+    .swatch-row {
+      display: flex;
+      gap: 2px;
+    }
+
+    .swatch {
+      width:  var(--swatch-size);
+      height: var(--swatch-size);
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+    }
+
+    /* active fg swatch — white dot top-left */
+    .swatch.active-fg::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 1px #000;
+    }
+
+    /* active bg swatch — white dot bottom-right */
+    .swatch.active-bg::before {
+      content: '';
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 1px #000;
+    }
+
+
+    /* ── Comparison buffer section ── */
+    #cmp-section { font-size: 10px; color: var(--text); }
+
+    .cmp-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .cmp-row label { color: var(--text-dim); white-space: nowrap; }
+
+    .cmp-input[type="text"] { width: 100%; text-align: left; }
+
+    .cmp-input {
+      width: 36px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 10px;
+      padding: 2px 4px;
+      text-align: right;
+    }
+    .cmp-input:focus { outline: 1px solid #555; }
+
+    #cmp-rebuild {
+      background: #222;
+      border: 1px solid #444;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 10px;
+      padding: 2px 7px;
+      cursor: pointer;
+    }
+    #cmp-rebuild:hover  { background: #2a2a2a; }
+    #cmp-rebuild:disabled { color: var(--text-dim); cursor: default; }
+
+    #cmp-status {
+      color: var(--text-dim);
+      font-size: 9px;
+      margin-top: 3px;
+    }
+
+    /* ── Canvas area ── */
+    #canvas-wrap {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0; left: 0;
+      image-rendering: pixelated;
+    }
+
+    /* ── Status bar ── */
+    #status {
+      position: fixed;
+      bottom: 0; left: var(--panel-width);
+      right: 0;
+      height: 22px;
+      background: #0d0d0d;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 20px;
+      font-size: 10px;
+      color: var(--text-dim);
+      z-index: 5;
+    }
+
+    #status span { white-space: nowrap; }
+
+    #st-fg-swatch, #st-bg-swatch {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border: 1px solid #444;
+      vertical-align: middle;
+      margin-right: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <aside id="panel">
+      <div class="logo">lbe</div>
+
+      <div id="palette-section">
+        <div class="panel-label">Characters</div>
+        <div id="palette-wrap">
+          <canvas id="palette-canvas"></canvas>
+        </div>
+      </div>
+
+      <div id="colour-section">
+        <div class="panel-label">Colour</div>
+        <div id="colour-grid"></div>
+      </div>
+
+      <div id="font-section">
+        <div class="panel-label">Font</div>
+        <select id="font-select" class="cmp-input" style="width:auto;text-align:left;padding:2px 4px"></select>
+      </div>
+
+      <div id="canvas-section">
+        <div class="panel-label">Canvas</div>
+        <div class="cmp-row">
+          <label>W</label>
+          <input id="canvas-w" class="cmp-input" type="number" min="1" max="256" value="64" />
+          <label>H</label>
+          <input id="canvas-h" class="cmp-input" type="number" min="1" max="256" value="32" />
+          <button id="canvas-apply">Apply</button>
+        </div>
+        <div class="cmp-row">
+          <button id="canvas-del-row">Del Row</button>
+          <button id="canvas-del-col">Del Col</button>
+        </div>
+      </div>
+
+      <div id="meta-section">
+        <div class="panel-label">Info</div>
+        <div class="cmp-row"><label>Title</label></div>
+        <div class="cmp-row"><input id="meta-title"  class="cmp-input" type="text" style="width:100%" placeholder="Untitled" /></div>
+        <div class="cmp-row"><label>Artist</label></div>
+        <div class="cmp-row"><input id="meta-artist" class="cmp-input" type="text" style="width:100%" placeholder="" /></div>
+        <div class="cmp-row"><label>Group</label></div>
+        <div class="cmp-row"><input id="meta-group"  class="cmp-input" type="text" style="width:100%" placeholder="" /></div>
+      </div>
+
+      <div id="file-section">
+        <div class="panel-label">File</div>
+        <div class="cmp-row">
+          <button id="btn-save">Save</button>
+          <button id="btn-load">Load</button>
+          <input id="file-input" type="file" accept=".lbe,.json" style="display:none" />
+        </div>
+      </div>
+
+      <div id="cmp-section">
+        <div class="panel-label">Comparison Buffer</div>
+        <div class="cmp-row">
+          <label>Size</label>
+          <input id="cmp-size" class="cmp-input" type="number" min="8" max="128" value="32" />
+          <label>px &nbsp; Tol.</label>
+          <input id="cmp-tol" class="cmp-input" type="number" min="1" max="50" value="10" />
+          <label>%</label>
+        </div>
+        <div class="cmp-row">
+          <button id="cmp-rebuild">Rebuild</button>
+          <span id="cmp-status">–</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+
+  </div>
+
+  <div id="status">
+    <span id="st-mode">TILE | BOTH</span>
+    <span id="st-zoom">zoom 1×</span>
+    <span id="st-pos">0, 0</span>
+    <span id="st-tile">tile 00</span>
+    <span><span id="st-fg-swatch"></span><span id="st-fg-name">white</span></span>
+    <span><span id="st-bg-swatch"></span><span id="st-bg-name">black</span></span>
+    <span id="st-grid">64 × 32</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
