@@ -5,7 +5,7 @@
 import { TOTAL_TILES, PALETTE_COLS } from './constants.js';
 import { state }                     from './state.js';
 import { tileSvgSource }             from './font.js';
-import { drawPalette }               from './draw.js';
+import { updatePaletteCursor }       from './palette.js';
 
 export const cmp = {
   size:      32,
@@ -124,7 +124,7 @@ export function applyTransform(name) {
     if (bufsMatch(transformed, cmp.bufs[i], threshold)) {
       state.palCursor.col = i % PALETTE_COLS;
       state.palCursor.row = Math.floor(i / PALETTE_COLS);
-      drawPalette();
+      updatePaletteCursor();
       return;
     }
   }

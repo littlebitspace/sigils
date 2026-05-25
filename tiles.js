@@ -1,10 +1,11 @@
 // tiles.js
 // ── Tile rasterisation & cache ─────────────────────────────────────────────
+// Rasterised images are used by the main canvas only.
+// The palette panel uses SVGs directly via palette.js.
 
 import { PETSCII, FONT_SIZE } from './constants.js';
 import { tileSvgSource }      from './font.js';
 import { draw }               from './draw.js';
-import { drawPalette }        from './draw.js';
 
 export const tileCache = new Map();
 
@@ -24,7 +25,7 @@ export function rasteriseTile(tileIdx, colIdx) {
   const blobUrl  = URL.createObjectURL(blob);
   const img      = new Image(FONT_SIZE, FONT_SIZE);
   tileCache.set(key, img);
-  img.onload  = () => { URL.revokeObjectURL(blobUrl); draw(); drawPalette(); };
+  img.onload  = () => { URL.revokeObjectURL(blobUrl); draw(); };
   img.onerror = () => URL.revokeObjectURL(blobUrl);
   img.src = blobUrl;
   return img;

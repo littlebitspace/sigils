@@ -1,28 +1,23 @@
 // draw.js
 // ── Rendering ──────────────────────────────────────────────────────────────
 // Pure read — never mutates state or grid data.
+// Palette rendering has moved to palette.js (SVG-based DOM grid).
 
 import { CELL_PX, PETSCII, GRID_COLOR,
-         CURSOR_COLOR, PAL_CURSOR_COLOR,
-         EMPTY_COLOR, PALETTE_COLS,
-         PALETTE_ROWS, PALETTE_CELL,
-         TOTAL_TILES }               from './constants.js';
+         CURSOR_COLOR,
+         EMPTY_COLOR }               from './constants.js';
 import { state, cursorVisible,
          selectionRect }             from './state.js';
 import { grid }                      from './grid.js';
 import { getTile }                   from './tiles.js';
-import { tileSvgSource }             from './font.js';
 import { spaceIndex }                from './font.js';
 
-const canvas    = document.getElementById('canvas');
-const ctx       = canvas.getContext('2d');
-const wrap      = document.getElementById('canvas-wrap');
-const palCanvas = document.getElementById('palette-canvas');
-const palCtx    = palCanvas.getContext('2d');
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('canvas-wrap');
 
 const stZoom   = document.getElementById('st-zoom');
 const stPos    = document.getElementById('st-pos');
-const stTile   = document.getElementById('st-tile');
 const stFgName = document.getElementById('st-fg-name');
 const stBgName = document.getElementById('st-bg-name');
 const stFgSw   = document.getElementById('st-fg-swatch');
@@ -39,59 +34,6 @@ export function resizeCanvas() {
   draw();
 }
 window.addEventListener('resize', resizeCanvas);
-
-
-// ── Palette ────────────────────────────────────────────────────────────────
-
-export function drawPalette() {
-  const W = palCanvas.width;
-  const H = palCanvas.height;
-  palCtx.clearRect(0, 0, W, H);
-  palCtx.fillStyle = '#0d0d0d';
-  palCtx.fillRect(0, 0, W, H);
-
-  for (let i = 0; i < TOTAL_TILES; i++) {
-    const col = i % PALETTE_COLS;
-    const row = Math.floor(i / PALETTE_COLS);
-    const x   = col * PALETTE_CELL;
-    const y   = row * PALETTE_CELL;
-    palCtx.fillStyle = PETSCII[state.bgIndex].hex;
-    palCtx.fillRect(x, y, PALETTE_CELL, PALETTE_CELL);
-    const img = getTile(i, state.fgIndex);
-    if (img && img.complete && img.naturalWidth) {
-      palCtx.drawImage(img, x, y, PALETTE_CELL, PALETTE_CELL);
-    } else if (!tileSvgSource[i]) {
-      palCtx.fillStyle = EMPTY_COLOR;
-      palCtx.fillRect(x + PALETTE_CELL / 2 - 0.5, y + PALETTE_CELL / 2 - 0.5, 1, 1);
-    }
-  }
-
-  palCtx.strokeStyle = '#222';
-  palCtx.lineWidth   = 0.5;
-  for (let c = 0; c <= PALETTE_COLS; c++) {
-    palCtx.beginPath();
-    palCtx.moveTo(c * PALETTE_CELL + 0.5, 0);
-    palCtx.lineTo(c * PALETTE_CELL + 0.5, H);
-    palCtx.stroke();
-  }
-  for (let r = 0; r <= PALETTE_ROWS; r++) {
-    palCtx.beginPath();
-    palCtx.moveTo(0, r * PALETTE_CELL + 0.5);
-    palCtx.lineTo(W, r * PALETTE_CELL + 0.5);
-    palCtx.stroke();
-  }
-
-  const { col, row } = state.palCursor;
-  palCtx.strokeStyle = PAL_CURSOR_COLOR;
-  palCtx.lineWidth   = 1;
-  palCtx.strokeRect(
-    col * PALETTE_CELL + 0.5, row * PALETTE_CELL + 0.5,
-    PALETTE_CELL - 1, PALETTE_CELL - 1
-  );
-
-  const idx = state.palCursor.row * PALETTE_COLS + state.palCursor.col;
-  stTile.textContent = `tile ${idx.toString(16).padStart(2, '0')}`;
-}
 
 
 // ── Main draw ──────────────────────────────────────────────────────────────

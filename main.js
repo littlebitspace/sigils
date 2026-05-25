@@ -7,9 +7,9 @@ import { grid, initGrid,
          resizeGrid, deleteRow,
          deleteCol }              from './grid.js';
 import { snapshotForUndo }        from './history.js';
-import { draw, drawPalette,
-         resizeCanvas }           from './draw.js';
-import { initPaletteCanvas,
+import { draw, resizeCanvas }     from './draw.js';
+import { initPaletteGrid,
+         refreshPalette,
          buildSwatches }          from './palette.js';
 import { initFontSelector,
          loadTileset }            from './font.js';
@@ -52,25 +52,23 @@ document.getElementById('canvas-del-col').addEventListener('click', () => {
 // ── Grid centering ─────────────────────────────────────────────────────────
 
 function centreGrid() {
-  const cell  = CELL_PX * state.zoom;
-  state.pan.x = Math.round((canvas.width  - grid.cols * cell) / 2);
-  state.pan.y = Math.round((canvas.height - grid.rows * cell) / 2);
+  const canvas = document.getElementById('canvas');
+  const cell   = CELL_PX * state.zoom;
+  state.pan.x  = Math.round((canvas.width  - grid.cols * cell) / 2);
+  state.pan.y  = Math.round((canvas.height - grid.rows * cell) / 2);
 }
 
 
 // ── Boot sequence ──────────────────────────────────────────────────────────
 
-const canvas = document.getElementById('canvas');
-
 initGrid(grid.cols, grid.rows);
-initPaletteCanvas();
+initPaletteGrid();
 buildSwatches();
 updateCanvasSizeInputs();
 initMetaInputs();
 resizeCanvas();
 centreGrid();
 draw();
-drawPalette();
 initIO();
 initCompare();
 initInput();

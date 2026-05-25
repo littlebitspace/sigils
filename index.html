@@ -74,6 +74,30 @@
       image-rendering: pixelated;
     }
 
+    #palette-grid {
+      display: grid;
+      grid-template-columns: repeat(16, var(--palette-cell));
+      grid-template-rows:    repeat(16, var(--palette-cell));
+      gap: 0;
+      background: #222;
+      outline: 1px solid #222;
+    }
+
+    #palette-grid img {
+      width:  var(--palette-cell);
+      height: var(--palette-cell);
+      display: block;
+      cursor: pointer;
+      image-rendering: pixelated;
+    }
+
+    #palette-grid img.pal-active {
+      outline: 1px solid #fff;
+      outline-offset: -1px;
+      z-index: 1;
+      position: relative;
+    }
+
     #colour-grid { display: flex; flex-direction: column; gap: 2px; }
 
     /* ── Colour swatches ── */
@@ -210,7 +234,7 @@
       <div id="palette-section">
         <div class="panel-label">Characters</div>
         <div id="palette-wrap">
-          <canvas id="palette-canvas"></canvas>
+          <div id="palette-grid"></div>
         </div>
       </div>
 

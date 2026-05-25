@@ -4,8 +4,9 @@
 import { TOTAL_TILES }               from './constants.js';
 import { state }                     from './state.js';
 import { rasteriseTile, clearCache } from './tiles.js';
-import { drawPalette }               from './draw.js';
 import { draw }                      from './draw.js';
+import { refreshPalette,
+         initPaletteGrid }           from './palette.js';
 import { buildCmpBuffers }           from './compare.js';
 
 
@@ -18,7 +19,7 @@ export function spaceIndex() {
 
 
 // ── Tileset source ─────────────────────────────────────────────────────────
-// Populated by loadTileset; consumed read-only by tiles.js.
+// Populated by loadTileset; consumed read-only by tiles.js and palette.js.
 
 export const tileSvgSource = new Array(TOTAL_TILES).fill(null);
 
@@ -47,10 +48,14 @@ export async function loadTileset(fontName) {
   }
   await Promise.all(promises);
 
+  // Rasterise for the main canvas (current fg colour only)
   for (let i = 0; i < TOTAL_TILES; i++) {
     if (tileSvgSource[i]) rasteriseTile(i, state.fgIndex);
   }
-  drawPalette();
+
+  // Rebuild palette SVG grid and main canvas
+  initPaletteGrid();
+  refreshPalette();
   draw();
   buildCmpBuffers();
 }

@@ -19,8 +19,8 @@ import { placeTile, eraseTile,
 import { setFg, setBg }              from './palette.js';
 import { fontMeta }                  from './font.js';
 import { applyTransform }            from './compare.js';
-import { draw, drawPalette,
-         resizeCanvas }              from './draw.js';
+import { draw, resizeCanvas }        from './draw.js';
+import { updatePaletteCursor }       from './palette.js';
 
 
 // ── Zoom ───────────────────────────────────────────────────────────────────
@@ -193,22 +193,22 @@ function initKeyboard() {
       case 'ArrowLeft':
         e.preventDefault();
         palCursor.col = Math.max(0, palCursor.col - 1);
-        drawPalette(); break;
+        updatePaletteCursor(); break;
       case 'l': case 'L':
       case 'ArrowRight':
         e.preventDefault();
         palCursor.col = Math.min(PALETTE_COLS - 1, palCursor.col + 1);
-        drawPalette(); break;
+        updatePaletteCursor(); break;
       case 'i': case 'I':
       case 'ArrowUp':
         e.preventDefault();
         palCursor.row = Math.max(0, palCursor.row - 1);
-        drawPalette(); break;
+        updatePaletteCursor(); break;
       case 'k': case 'K':
       case 'ArrowDown':
         e.preventDefault();
         palCursor.row = Math.min(PALETTE_ROWS - 1, palCursor.row + 1);
-        drawPalette(); break;
+        updatePaletteCursor(); break;
 
       case 'e': case 'E': placeTile(); break;
       case 'q': case 'Q': eraseTile(); break;
