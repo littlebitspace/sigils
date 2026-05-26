@@ -1,15 +1,19 @@
 // editor.js
 // ── Editor actions ─────────────────────────────────────────────────────────
-// Sits between input events and raw grid data.
-// Every action that mutates the grid lives here.
 
-import { PALETTE_COLS }    from './constants.js';
-import { state }           from './state.js';
-import { grid }            from './grid.js';
-import { snapshotForUndo } from './history.js';
-import { spaceIndex }      from './font.js';
-import { draw }            from './draw.js';
+import { PALETTE_COLS }            from './constants.js';
+import { state, markDirty }        from './state.js';
+import { grid }                    from './grid.js';
+import { snapshotForUndo }         from './history.js';
+import { spaceIndex }              from './font.js';
+import { draw }                    from './draw.js';
+import { scheduleAutosave }        from './autosave.js';
+import { buildSaveData }           from './io.js';
 
+function mutated() {
+  markDirty();
+  scheduleAutosave(buildSaveData);
+}
 
 // ── Coordinate helpers ─────────────────────────────────────────────────────
 
@@ -27,8 +31,6 @@ export function selectedTileIndex() {
 
 
 // ── Place & erase ──────────────────────────────────────────────────────────
-// Both operate on state.cursor, respecting writeMode.
-// An explicit tileIdx can be passed (e.g. from charmap lookup in typing mode).
 
 export function placeTile(tileIdx) {
   const { col, row } = state.cursor;
@@ -41,6 +43,7 @@ export function placeTile(tileIdx) {
   if (state.writeMode === 'both' || state.writeMode === 'colour') {
     grid.fg[i] = state.fgIndex;
   }
+  mutated();
   draw();
 }
 
@@ -51,11 +54,9 @@ export function eraseTile() {
   snapshotForUndo();
   grid.tile[i] = spaceIndex();
   grid.fg[i]   = 0;
+  mutated();
   draw();
 }
-
-
-// ── Typing mode backspace ──────────────────────────────────────────────────
 
 export function backspaceTile() {
   const { cursor } = state;
@@ -69,6 +70,7 @@ export function backspaceTile() {
   snapshotForUndo();
   grid.tile[i] = spaceIndex();
   grid.fg[i]   = 0;
+  mutated();
   draw();
 }
 

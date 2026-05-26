@@ -1,23 +1,27 @@
 // main.js
 // ── Boot ───────────────────────────────────────────────────────────────────
 
-import { CELL_PX }                from './constants.js';
-import { state, doc }             from './state.js';
+import { CELL_PX }                    from './constants.js';
+import { state, doc,
+         updateTitleBar, markDirty }  from './state.js';
 import { grid, initGrid,
          resizeGrid, deleteRow,
-         deleteCol }              from './grid.js';
-import { snapshotForUndo }        from './history.js';
-import { draw, resizeCanvas }     from './draw.js';
+         deleteCol }                  from './grid.js';
+import { snapshotForUndo }            from './history.js';
+import { draw, resizeCanvas }         from './draw.js';
 import { initPaletteGrid,
          refreshPalette,
-         buildSwatches }          from './palette.js';
+         buildSwatches }              from './palette.js';
 import { initFontSelector,
-         loadTileset }            from './font.js';
-import { initIO }                 from './io.js';
-import { initInput }              from './input.js';
-import { initCompare }            from './compare.js';
+         loadTileset }                from './font.js';
+import { initIO, buildSaveData,
+         applyFileData }              from './io.js';
+import { initInput }                  from './input.js';
+import { initCompare }                from './compare.js';
 import { updateCanvasSizeInputs,
-         initMetaInputs }         from './ui.js';
+         initMetaInputs }             from './ui.js';
+import { checkAutosave,
+         scheduleAutosave }           from './autosave.js';
 
 
 // ── Canvas size controls ───────────────────────────────────────────────────
@@ -29,7 +33,10 @@ document.getElementById('canvas-apply').addEventListener('click', () => {
   snapshotForUndo();
   resizeGrid(w, h);
   updateCanvasSizeInputs();
+  markDirty();
   draw();
+  // Update export size preview
+  document.getElementById('export-tile-size').dispatchEvent(new Event('input'));
 });
 
 document.getElementById('canvas-del-row').addEventListener('click', () => {
@@ -37,7 +44,9 @@ document.getElementById('canvas-del-row').addEventListener('click', () => {
   snapshotForUndo();
   deleteRow(state.cursor.row);
   updateCanvasSizeInputs();
+  markDirty();
   draw();
+  document.getElementById('export-tile-size').dispatchEvent(new Event('input'));
 });
 
 document.getElementById('canvas-del-col').addEventListener('click', () => {
@@ -45,7 +54,9 @@ document.getElementById('canvas-del-col').addEventListener('click', () => {
   snapshotForUndo();
   deleteCol(state.cursor.col);
   updateCanvasSizeInputs();
+  markDirty();
   draw();
+  document.getElementById('export-tile-size').dispatchEvent(new Event('input'));
 });
 
 
@@ -72,4 +83,9 @@ draw();
 initIO();
 initCompare();
 initInput();
-initFontSelector().then(() => loadTileset(doc.font));
+updateTitleBar();
+
+initFontSelector().then(async () => {
+  await loadTileset(doc.font);
+  await checkAutosave(applyFileData);
+});

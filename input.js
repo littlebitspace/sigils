@@ -1,7 +1,5 @@
 // input.js
 // ── Input handling ─────────────────────────────────────────────────────────
-// Translates raw browser events into editor actions or state changes.
-// Never mutates grid data directly.
 
 import { CELL_PX, ZOOM_STEPS,
          PALETTE_COLS, PALETTE_ROWS,
@@ -11,16 +9,17 @@ import { state,
          cycleWriteMode }            from './state.js';
 import { grid }                      from './grid.js';
 import { undo, redo }                from './history.js';
-import { saveFile }                  from './io.js';
+import { saveFile, saveFileAs,
+         newFile, openFilePicker }   from './io.js';
 import { placeTile, eraseTile,
          backspaceTile,
          extendSelection,
          clearSelection }            from './editor.js';
-import { setFg, setBg }              from './palette.js';
+import { setFg, setBg,
+         updatePaletteCursor }       from './palette.js';
 import { fontMeta }                  from './font.js';
 import { applyTransform }            from './compare.js';
 import { draw, resizeCanvas }        from './draw.js';
-import { updatePaletteCursor }       from './palette.js';
 
 
 // ── Zoom ───────────────────────────────────────────────────────────────────
@@ -81,21 +80,27 @@ function initKeyboard() {
 
     const { cursor, palCursor } = state;
 
-    // Ctrl shortcuts — always active
+    // ── Ctrl shortcuts — always active ────────────────────────────────────
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z') { e.preventDefault(); undo(); return; }
       if (e.key === 'y') { e.preventDefault(); redo(); return; }
-      if (e.key === 's') { e.preventDefault(); saveFile(); return; }
+      if (e.key === 'n') { e.preventDefault(); newFile(); return; }
+      if (e.key === 'o') { e.preventDefault(); openFilePicker(); return; }
+      if (e.key === 's') {
+        e.preventDefault();
+        if (e.shiftKey) saveFileAs(); else saveFile();
+        return;
+      }
     }
 
-    // Escape
+    // ── Escape ────────────────────────────────────────────────────────────
     if (e.key === 'Escape') {
       if (state.selection) { clearSelection(); return; }
       if (state.mode === 'typing') { exitTyping(draw); return; }
       return;
     }
 
-    // Shift+Arrows — extend selection (all modes)
+    // ── Shift+Arrows — extend selection ───────────────────────────────────
     if (e.shiftKey) {
       switch (e.key) {
         case 'ArrowLeft':  e.preventDefault(); extendSelection(-1,  0); return;
@@ -105,7 +110,7 @@ function initKeyboard() {
       }
     }
 
-    // Number keys 1-4: fg / bg colour (tile mode only)
+    // ── Number keys 1-4: fg / bg colour (tile mode only) ──────────────────
     if (state.mode !== 'typing') {
       const codeMatch = e.code.match(/^Digit([1-4])$/);
       if (codeMatch) {
@@ -123,7 +128,7 @@ function initKeyboard() {
       }
     }
 
-    // Typing mode
+    // ── Typing mode ───────────────────────────────────────────────────────
     if (state.mode === 'typing') {
       switch (e.key) {
         case 'ArrowLeft':
@@ -168,7 +173,7 @@ function initKeyboard() {
       }
     }
 
-    // Tile mode shortcuts
+    // ── Tile mode shortcuts ───────────────────────────────────────────────
     const PAN_STEP = Math.round(CELL_PX * state.zoom * 4);
 
     switch (e.key) {

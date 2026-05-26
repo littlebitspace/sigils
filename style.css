@@ -1,0 +1,238 @@
+/* style.css */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Variables ── */
+:root {
+  --panel-width:  220px;
+  --bg:           #1a1a1a;
+  --panel-bg:     #111;
+  --panel-border: #2a2a2a;
+  --text:         #ccc;
+  --text-dim:     #555;
+  --accent:       #e8e0c8;
+  --palette-cell: 11px;
+  --swatch-size:  18px;
+}
+
+/* ── Base ── */
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: monospace;
+}
+
+#app {
+  display: flex;
+  width: 100%; height: 100%;
+}
+
+/* ── Buttons & inputs (shared) ── */
+button {
+  background: #222;
+  border: 1px solid #444;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover    { background: #2a2a2a; }
+button:disabled { color: var(--text-dim); cursor: default; }
+
+input, select {
+  background: var(--bg);
+  border: 1px solid #333;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 10px;
+  padding: 2px 4px;
+}
+input:focus, select:focus { outline: 1px solid #555; }
+
+input[type="number"] {
+  width: 36px;
+  text-align: right;
+}
+
+input[type="text"] {
+  width: 100%;
+  text-align: left;
+}
+
+/* ── Side panel ── */
+#panel {
+  width: var(--panel-width);
+  min-width: var(--panel-width);
+  height: 100%;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 20px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.section-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.panel-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.panel-row label {
+  color: var(--text-dim);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* ── Glyph palette ── */
+#palette-wrap {
+  width:  calc(var(--palette-cell) * 16 + 1px);
+  height: calc(var(--palette-cell) * 16 + 1px);
+  flex-shrink: 0;
+}
+
+#palette-grid {
+  display: grid;
+  grid-template-columns: repeat(16, var(--palette-cell));
+  grid-template-rows:    repeat(16, var(--palette-cell));
+  gap: 0;
+  background: #222;
+  outline: 1px solid #222;
+}
+
+#palette-grid img {
+  width:  var(--palette-cell);
+  height: var(--palette-cell);
+  display: block;
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+#palette-grid img.pal-active {
+  outline: 1px solid #fff;
+  outline-offset: -1px;
+  z-index: 1;
+  position: relative;
+}
+
+/* ── Colour swatches ── */
+#colour-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.swatch-row {
+  display: flex;
+  gap: 2px;
+}
+
+.swatch {
+  width:  var(--swatch-size);
+  height: var(--swatch-size);
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+/* active fg — white dot top-left */
+.swatch.active-fg::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px #000;
+}
+
+/* active bg — white dot bottom-right */
+.swatch.active-bg::before {
+  content: '';
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px #000;
+}
+
+/* ── Export section ── */
+#export-size-label {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ── Comparison buffer ── */
+#cmp-section { font-size: 10px; }
+
+#cmp-status {
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+/* ── Canvas area ── */
+#canvas-wrap {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+#canvas {
+  position: absolute;
+  top: 0; left: 0;
+  image-rendering: pixelated;
+}
+
+/* ── Status bar ── */
+#status {
+  position: fixed;
+  bottom: 0; left: var(--panel-width);
+  right: 0;
+  height: 22px;
+  background: #0d0d0d;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 20px;
+  font-size: 10px;
+  color: var(--text-dim);
+  z-index: 5;
+}
+
+#status span { white-space: nowrap; }
+
+#st-fg-swatch,
+#st-bg-swatch {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border: 1px solid #444;
+  vertical-align: middle;
+  margin-right: 3px;
+}

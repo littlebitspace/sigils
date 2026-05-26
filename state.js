@@ -4,12 +4,13 @@
 import { ZOOM_STEPS, ZOOM_DEFAULT, WRITE_MODES } from './constants.js';
 
 export const doc = {
-  version: 1,
-  title:   'Untitled',
-  artist:  '',
-  group:   '',
-  font:    'petscii',
-  delay:   500,
+  version:  1,
+  title:    'Untitled',
+  artist:   '',
+  group:    '',
+  font:     'petscii',
+  delay:    500,
+  dirty:    false,   // unsaved changes flag
 };
 
 export const state = {
@@ -27,13 +28,30 @@ export const state = {
   mode:      'tile',       // 'tile' | 'typing'
   writeMode: 'both',       // 'both' | 'char' | 'colour'
   typing:    { startCol: 0 },
-  selection: null,         // { anchorCol, anchorRow, cursorCol, cursorRow } | null
+  selection: null,
 };
 
 
+// ── Dirty flag ─────────────────────────────────────────────────────────────
+
+export function markDirty() {
+  doc.dirty = true;
+  updateTitleBar();
+}
+
+export function markClean() {
+  doc.dirty = false;
+  updateTitleBar();
+}
+
+export function updateTitleBar() {
+  const prefix = doc.dirty ? '● ' : '';
+  document.title = `${prefix}${doc.title || 'Untitled'} — lbe`;
+}
+
+
 // ── Cursor blink ───────────────────────────────────────────────────────────
-// drawFn is passed in rather than imported to avoid a circular dependency:
-// draw.js imports state.js, so state.js must not import draw.js.
+// drawFn passed in to avoid circular dep: draw.js → state.js → draw.js
 
 export let cursorVisible = true;
 let blinkInterval        = null;
