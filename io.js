@@ -62,7 +62,7 @@ export async function newFile() {
   }
 
   // Reset grid, fill with space character
-  initGrid(64, 32);
+  initGrid(40, 25);
   grid.tile.fill(spaceIndex());
 
   // Reset doc — keep artist and group

@@ -7,8 +7,8 @@
 import { state } from './state.js';
 
 export const grid = {
-  cols: 64,
-  rows: 32,
+  cols: 40,
+  rows: 25,
   tile: null,   // Uint8Array — tile index per cell
   fg:   null,   // Uint8Array — fg palette index per cell
 };
