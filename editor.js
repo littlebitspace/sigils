@@ -193,7 +193,27 @@ export function stampFloat() {
       }
     }
   }
-  state.floatSel = null;
+  // Keep float active so user can stamp again elsewhere
+  mutated();
+  draw();
+}
+
+// Erase cells currently under the float
+export function eraseUnderFloat() {
+  if (!state.floatSel) return;
+  const { cols, rows, col: fc, row: fr } = state.floatSel;
+  snapshotForUndo();
+  const space = spaceIndex();
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const gc = fc + c;
+      const gr = fr + r;
+      if (!inBounds(gc, gr)) continue;
+      const i = cellIndex(gc, gr);
+      grid.tile[i] = space;
+      grid.fg[i]   = 0;
+    }
+  }
   mutated();
   draw();
 }

@@ -21,6 +21,7 @@ import { placeTile, eraseTile,
          moveFloat,
          stampFloat,
          discardFloat,
+         eraseUnderFloat,
          transformFloat }            from './editor.js';
 import { setFg, setBg,
          updatePaletteCursor }       from './palette.js';
@@ -75,8 +76,10 @@ function canvasToCell(clientX, clientY) {
 // ── Mouse drawing ──────────────────────────────────────────────────────────
 
 function initDrawing() {
-  let painting   = null;   // 'place' | 'erase' | null
-  let refDragFn  = null;   // active ref drag move handler
+  let painting      = null;   // 'place' | 'erase' | null
+  let refDragFn     = null;   // active ref drag move handler
+  let floatDragging = false;
+  let floatDragStart = { mx: 0, my: 0, col: 0, row: 0 };
 
   canvas.addEventListener('mousedown', e => {
     // ── Ref edit mode mouse ──────────────────────────────────────────────
@@ -94,8 +97,24 @@ function initDrawing() {
       }
     }
 
+    // ── Float mouse ───────────────────────────────────────────────────────
+    if (state.floatSel) {
+      if (e.button === 0) {
+        // Start dragging the float
+        floatDragging  = true;
+        const { col, row } = canvasToCell(e.clientX, e.clientY);
+        floatDragStart = { col, row,
+                           fc: state.floatSel.col,
+                           fr: state.floatSel.row };
+        e.preventDefault();
+      } else if (e.button === 2) {
+        discardFloat();
+        e.preventDefault();
+      }
+      return;
+    }
+
     if (e.button === 0 && !e.shiftKey && !e.altKey) {
-      if (state.floatSel) { stampFloat(); return; }
       painting = 'place';
       const { col, row } = canvasToCell(e.clientX, e.clientY);
       state.cursor.col = col;
@@ -103,7 +122,6 @@ function initDrawing() {
       placeTile();
       e.preventDefault();
     } else if (e.button === 2) {
-      if (state.floatSel) { discardFloat(); return; }
       painting = 'erase';
       const { col, row } = canvasToCell(e.clientX, e.clientY);
       state.cursor.col = col;
@@ -123,6 +141,13 @@ function initDrawing() {
       refDragFn(sx, sy);
       return;
     }
+    if (floatDragging && state.floatSel) {
+      const { col, row } = canvasToCell(e.clientX, e.clientY);
+      state.floatSel.col = floatDragStart.fc + (col - floatDragStart.col);
+      state.floatSel.row = floatDragStart.fr + (row - floatDragStart.row);
+      draw();
+      return;
+    }
     if (!painting) return;
     const { col, row } = canvasToCell(e.clientX, e.clientY);
     if (col === state.cursor.col && row === state.cursor.row) return;
@@ -133,7 +158,8 @@ function initDrawing() {
   });
 
   window.addEventListener('mouseup', e => {
-    if (refDragFn) { refDragFn = null; return; }
+    if (refDragFn)     { refDragFn = null; return; }
+    if (floatDragging) { floatDragging = false; return; }
     if (e.button === 0 || e.button === 2) painting = null;
   });
 
@@ -202,9 +228,11 @@ function initKeyboard() {
       return;
     }
 
-    // ── Global B/P shortcuts ───────────────────────────────────────────────
-    if (e.key === 'b' || e.key === 'B') { toggleRefVisible(); draw(); return; }
-    if (e.key === 'p' || e.key === 'P') { toggleRefEditing(); draw(); return; }
+    // ── Global B/P shortcuts (skip in typing mode) ─────────────────────────
+    if (state.mode !== 'typing') {
+      if (e.key === 'b' || e.key === 'B') { toggleRefVisible(); draw(); return; }
+      if (e.key === 'p' || e.key === 'P') { toggleRefEditing(); draw(); return; }
+    }
 
     // ── Ref edit mode ──────────────────────────────────────────────────────
     if (ref.editing) {
@@ -237,12 +265,15 @@ function initKeyboard() {
         case 'ArrowUp':     e.preventDefault(); moveFloat( 0, -1); return;
         case 'ArrowDown':   e.preventDefault(); moveFloat( 0,  1); return;
         case 'e': case 'E': stampFloat(); return;
+        case 'q': case 'Q': eraseUnderFloat(); return;
         case 'r': case 'R': transformFloat('R'); return;
         case 'h': case 'H': transformFloat('H'); return;
         case 'v': case 'V': transformFloat('V'); return;
         case 'i': case 'I': transformFloat('I'); return;
+        case 'f': case 'F': transformFloat('I'); return;
+        case 'm': case 'M': cycleWriteMode(draw); updateWriteButtons(); return;
       }
-      return;  // swallow all other keys in float mode
+      // Don't swallow unhandled keys — fall through to allow other shortcuts
     }
 
     // ── Selecting mode (shift+arrows active) ───────────────────────────────
