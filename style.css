@@ -4,15 +4,17 @@
 
 /* ── Variables ── */
 :root {
-  --panel-width:  220px;
-  --bg:           #1a1a1a;
-  --panel-bg:     #111;
-  --panel-border: #2a2a2a;
-  --text:         #ccc;
-  --text-dim:     #555;
-  --accent:       #e8e0c8;
-  --palette-cell: 11px;
-  --swatch-size:  18px;
+  --panel-width:   260px;
+  --panel-min:     250px;
+  --panel-max:     520px;
+  --panel-padding: 12px;
+  --bg:            #1a1a1a;
+  --panel-bg:      #111;
+  --panel-border:  #2a2a2a;
+  --text:          #ccc;
+  --text-dim:      #555;
+  --accent:        #e8e0c8;
+  --swatch-size:   18px;
 }
 
 /* ── Base ── */
@@ -29,7 +31,7 @@ html, body {
   width: 100%; height: 100%;
 }
 
-/* ── Buttons & inputs (shared) ── */
+/* ── Buttons ── */
 button {
   background: #222;
   border: 1px solid #444;
@@ -42,62 +44,140 @@ button {
 }
 button:hover    { background: #2a2a2a; }
 button:disabled { color: var(--text-dim); cursor: default; }
+button.active   { background: #383838; border-color: #666; color: #fff; }
 
+/* ── Button groups ── */
+.btn-group {
+  display: flex;
+}
+.btn-group button {
+  border-radius: 0;
+  border-right-width: 0;
+}
+.btn-group button:first-child { border-radius: 2px 0 0 2px; }
+.btn-group button:last-child  { border-radius: 0 2px 2px 0; border-right-width: 1px; }
+
+/* ── Inputs & selects ── */
 input, select {
   background: var(--bg);
   border: 1px solid #333;
   color: var(--text);
   font-family: monospace;
   font-size: 10px;
-  padding: 2px 4px;
+  padding: 2px 6px;
 }
 input:focus, select:focus { outline: 1px solid #555; }
 
-input[type="number"] {
-  width: 36px;
-  text-align: right;
-}
+input[type="text"]   { width: 100%; text-align: left; }
+input[type="number"] { width: 56px; text-align: right; }
 
-input[type="text"] {
-  width: 100%;
-  text-align: left;
-}
+/* Hide number spinner arrows — arrow key inc/dec still works */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
 /* ── Side panel ── */
 #panel {
+  position: relative;
   width: var(--panel-width);
-  min-width: var(--panel-width);
+  min-width: var(--panel-min);
+  max-width: var(--panel-max);
   height: 100%;
   background: var(--panel-bg);
   border-right: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
-  gap: 20px;
+  padding: 12px var(--panel-padding) 12px;
+  gap: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 10;
+  flex-shrink: 0;
 }
 
-.logo {
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
-  text-transform: uppercase;
+/* Drag handle */
+#panel-resize {
+  position: absolute;
+  top: 0; right: -3px;
+  width: 6px; height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+}
+#panel-resize:hover,
+#panel-resize.dragging {
+  background: rgba(255,255,255,0.06);
 }
 
-.section-label {
+/* ── Expandable sections (<details>) ── */
+details {
+  border-bottom: 1px solid var(--panel-border);
+}
+
+details > summary {
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  padding: 8px 0 8px 14px;
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  user-select: none;
+}
+details > summary::-webkit-details-marker { display: none; }
+
+/* Arrow indicator */
+details > summary::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  font-size: 8px;
+  transition: transform 0.15s;
+  color: var(--text-dim);
+}
+details[open] > summary::before {
+  transform: rotate(90deg);
 }
 
+details > summary:hover { color: var(--text); }
+
+.section-body {
+  padding: 6px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Nested details (comparison buffer) */
+details details {
+  border-bottom: none;
+  border-top: 1px solid var(--panel-border);
+  margin-top: 8px;
+}
+details details > summary {
+  padding-left: 14px;
+  font-size: 8px;
+}
+details details .section-body {
+  padding-top: 6px;
+}
+
+/* ── Subsection labels (within a section body) ── */
+.subsection-label {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+.subsection-label:first-child { margin-top: 0; }
+
+/* ── Panel rows ── */
 .panel-row {
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-bottom: 5px;
   flex-wrap: wrap;
 }
 
@@ -107,17 +187,31 @@ input[type="text"] {
   white-space: nowrap;
 }
 
+/* Two-column label+input pairs */
+.input-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.input-grid label {
+  color: var(--text-dim);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
 /* ── Glyph palette ── */
 #palette-wrap {
-  width:  calc(var(--palette-cell) * 16 + 1px);
-  height: calc(var(--palette-cell) * 16 + 1px);
+  width: 100%;
   flex-shrink: 0;
 }
 
 #palette-grid {
   display: grid;
-  grid-template-columns: repeat(16, var(--palette-cell));
-  grid-template-rows:    repeat(16, var(--palette-cell));
+  grid-template-columns: repeat(16, var(--palette-cell, 1fr));
+  grid-template-rows:    repeat(16, var(--palette-cell, 1fr));
+  width: 100%;
   gap: 0;
   background: #222;
   outline: 1px solid #222;
@@ -158,7 +252,6 @@ input[type="text"] {
   position: relative;
 }
 
-/* active fg — white dot top-left */
 .swatch.active-fg::after {
   content: '';
   position: absolute;
@@ -169,7 +262,6 @@ input[type="text"] {
   box-shadow: 0 0 0 1px #000;
 }
 
-/* active bg — white dot bottom-right */
 .swatch.active-bg::before {
   content: '';
   position: absolute;
@@ -180,15 +272,13 @@ input[type="text"] {
   box-shadow: 0 0 0 1px #000;
 }
 
-/* ── Export section ── */
+/* ── Export ── */
 #export-size-label {
   font-size: 10px;
   color: var(--text-dim);
 }
 
 /* ── Comparison buffer ── */
-#cmp-section { font-size: 10px; }
-
 #cmp-status {
   color: var(--text-dim);
   font-size: 9px;
@@ -201,6 +291,7 @@ input[type="text"] {
   position: relative;
   overflow: hidden;
   cursor: crosshair;
+  min-width: 0;
 }
 
 #canvas {
@@ -212,7 +303,8 @@ input[type="text"] {
 /* ── Status bar ── */
 #status {
   position: fixed;
-  bottom: 0; left: var(--panel-width);
+  bottom: 0;
+  left: var(--panel-width);
   right: 0;
   height: 22px;
   background: #0d0d0d;

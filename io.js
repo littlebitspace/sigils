@@ -8,9 +8,10 @@ import { doc, state,
          markDirty, markClean,
          updateTitleBar }             from './state.js';
 import { grid, initGrid }             from './grid.js';
-import { undoStack, redoStack }       from './history.js';
+import { undoStack, redoStack,
+         snapshotForUndo }           from './history.js';
 import { loadTileset, currentFont,
-         tileSvgSource }              from './font.js';
+         tileSvgSource, spaceIndex }  from './font.js';
 import { updateCanvasSizeInputs }     from './ui.js';
 import { refreshSwatchMarkers,
          initPaletteGrid,
@@ -60,8 +61,9 @@ export async function newFile() {
     if (!ok) return;
   }
 
-  // Reset grid
+  // Reset grid, fill with space character
   initGrid(64, 32);
+  grid.tile.fill(spaceIndex());
 
   // Reset doc — keep artist and group
   doc.title   = 'Untitled';
@@ -201,12 +203,11 @@ export async function applyFileData(data) {
 
   state.bgIndex = data.background ?? 0;
 
-  const fontSel = document.getElementById('font-select');
-  if (fontSel) fontSel.value = doc.font;
-
   document.getElementById('meta-title').value  = doc.title;
   document.getElementById('meta-artist').value = doc.artist;
   document.getElementById('meta-group').value  = doc.group;
+
+  const fontSel = document.getElementById('font-select');
 
   updateCanvasSizeInputs();
   refreshSwatchMarkers();
@@ -216,17 +217,24 @@ export async function applyFileData(data) {
 
   updateTitleBar();
 
-  if (doc.font !== currentFont) {
-    await loadTileset(doc.font);
-  } else {
-    initPaletteGrid();
-    refreshPalette();
-    draw();
-  }
+  // Always reload the tileset to ensure palette and canvas are correct
+  await loadTileset(doc.font);
+
+  // Set font selector after load so the option is guaranteed to exist
+  if (fontSel) fontSel.value = doc.font;
 }
 
 
-// ── Export PNG ─────────────────────────────────────────────────────────────
+// ── Clear canvas ───────────────────────────────────────────────────────────
+
+export function clearCanvas() {
+  snapshotForUndo();
+  grid.tile.fill(spaceIndex());
+  grid.fg.fill(0);
+  markDirty();
+  scheduleAutosave(buildSaveData);
+  draw();
+}
 // Rasterises fresh SVGs at the target tile size onto an offscreen canvas.
 
 export async function exportPng(tileSize) {

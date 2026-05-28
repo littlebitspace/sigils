@@ -20,10 +20,12 @@ export function initGrid(cols, rows) {
   grid.fg   = new Uint8Array(cols * rows);
 }
 
-export function resizeGrid(newCols, newRows) {
+export function resizeGrid(newCols, newRows, spaceIdx = 0) {
   const { tile: oldTile, fg: oldFg, cols: oldCols, rows: oldRows } = grid;
   const newTile = new Uint8Array(newCols * newRows);
   const newFg   = new Uint8Array(newCols * newRows);
+  // Fill new tile array with space first, then copy existing content over
+  newTile.fill(spaceIdx);
   const copyC   = Math.min(oldCols, newCols);
   const copyR   = Math.min(oldRows, newRows);
   for (let r = 0; r < copyR; r++) {

@@ -13,29 +13,40 @@ import { initPaletteGrid,
          refreshPalette,
          buildSwatches }              from './palette.js';
 import { initFontSelector,
-         loadTileset }                from './font.js';
+         loadTileset, spaceIndex }    from './font.js';
 import { initIO, buildSaveData,
-         applyFileData }              from './io.js';
+         applyFileData, clearCanvas } from './io.js';
 import { initInput }                  from './input.js';
 import { initCompare }                from './compare.js';
 import { updateCanvasSizeInputs,
-         initMetaInputs }             from './ui.js';
-import { checkAutosave,
-         scheduleAutosave }           from './autosave.js';
+         initMetaInputs,
+         initPanelResize,
+         initModeButtons,
+         updateModeButtons,
+         initWriteButtons,
+         updateWriteButtons,
+         initGridButton,
+         updateGridButton,
+         initGridEditButtons }        from './ui.js';
+import { checkAutosave }              from './autosave.js';
 
 
-// ── Canvas size controls ───────────────────────────────────────────────────
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Clear the canvas?')) return;
+  clearCanvas();
+});
+
+// ── Canvas apply/delete wiring ─────────────────────────────────────────────
 
 document.getElementById('canvas-apply').addEventListener('click', () => {
   const w = Math.max(1, Math.min(256, parseInt(document.getElementById('canvas-w').value) || grid.cols));
   const h = Math.max(1, Math.min(256, parseInt(document.getElementById('canvas-h').value) || grid.rows));
   if (w === grid.cols && h === grid.rows) return;
   snapshotForUndo();
-  resizeGrid(w, h);
+  resizeGrid(w, h, spaceIndex());
   updateCanvasSizeInputs();
   markDirty();
   draw();
-  // Update export size preview
   document.getElementById('export-tile-size').dispatchEvent(new Event('input'));
 });
 
@@ -77,15 +88,22 @@ initPaletteGrid();
 buildSwatches();
 updateCanvasSizeInputs();
 initMetaInputs();
+initModeButtons();
+initWriteButtons();
+initGridButton();
+initGridEditButtons();
 resizeCanvas();
 centreGrid();
 draw();
 initIO();
 initCompare();
 initInput();
+initPanelResize();
 updateTitleBar();
 
 initFontSelector().then(async () => {
   await loadTileset(doc.font);
+  grid.tile.fill(spaceIndex());  // fill with correct space tile now that font is known
+  draw();
   await checkAutosave(applyFileData);
 });

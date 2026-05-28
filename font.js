@@ -2,7 +2,7 @@
 // ── Font loading & metadata ────────────────────────────────────────────────
 
 import { TOTAL_TILES }               from './constants.js';
-import { state }                     from './state.js';
+import { state, doc }                from './state.js';
 import { rasteriseTile, clearCache } from './tiles.js';
 import { draw }                      from './draw.js';
 import { refreshPalette,
@@ -28,6 +28,7 @@ export const tileSvgSource = new Array(TOTAL_TILES).fill(null);
 
 export async function loadTileset(fontName) {
   currentFont = fontName;
+  doc.font    = fontName;
   tileSvgSource.fill(null);
   clearCache();
 

@@ -46,7 +46,7 @@ export function markClean() {
 
 export function updateTitleBar() {
   const prefix = doc.dirty ? '● ' : '';
-  document.title = `${prefix}${doc.title || 'Untitled'} — lbe`;
+  document.title = `${prefix}${doc.title || 'Untitled'} — Sigils`;
 }
 
 

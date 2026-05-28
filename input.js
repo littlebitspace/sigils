@@ -20,6 +20,9 @@ import { setFg, setBg,
 import { fontMeta }                  from './font.js';
 import { applyTransform }            from './compare.js';
 import { draw, resizeCanvas }        from './draw.js';
+import { updateModeButtons,
+         updateWriteButtons,
+         updateGridButton }          from './ui.js';
 
 
 // ── Zoom ───────────────────────────────────────────────────────────────────
@@ -39,6 +42,62 @@ function setZoom(idx, originX, originY) {
   state.zoom    = newZ;
   state.zoomIdx = idx;
   draw();
+}
+
+
+// ── Canvas coordinate → grid cell ──────────────────────────────────────────
+
+function canvasToCell(clientX, clientY) {
+  const rect  = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx    = (clientX - rect.left) * scaleX;
+  const cy    = (clientY - rect.top)  * scaleY;
+  const col   = Math.floor((cx - state.pan.x) / (CELL_PX * state.zoom));
+  const row   = Math.floor((cy - state.pan.y) / (CELL_PX * state.zoom));
+  return { col, row };
+}
+
+
+// ── Mouse drawing ──────────────────────────────────────────────────────────
+
+function initDrawing() {
+  let painting  = null;   // 'place' | 'erase' | null
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button === 0 && !e.shiftKey && !e.altKey) {
+      painting = 'place';
+      const { col, row } = canvasToCell(e.clientX, e.clientY);
+      state.cursor.col = col;
+      state.cursor.row = row;
+      placeTile();
+      e.preventDefault();
+    } else if (e.button === 2) {
+      painting = 'erase';
+      const { col, row } = canvasToCell(e.clientX, e.clientY);
+      state.cursor.col = col;
+      state.cursor.row = row;
+      eraseTile();
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!painting) return;
+    const { col, row } = canvasToCell(e.clientX, e.clientY);
+    // Only act if cursor actually moved to a new cell
+    if (col === state.cursor.col && row === state.cursor.row) return;
+    state.cursor.col = col;
+    state.cursor.row = row;
+    if (painting === 'place') placeTile();
+    else                      eraseTile();
+  });
+
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0 || e.button === 2) painting = null;
+  });
+
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 
@@ -76,7 +135,8 @@ function initPan() {
 
 function initKeyboard() {
   window.addEventListener('keydown', e => {
-    if (e.target !== document.body && e.target !== document.documentElement) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
     const { cursor, palCursor } = state;
 
@@ -96,7 +156,7 @@ function initKeyboard() {
     // ── Escape ────────────────────────────────────────────────────────────
     if (e.key === 'Escape') {
       if (state.selection) { clearSelection(); return; }
-      if (state.mode === 'typing') { exitTyping(draw); return; }
+      if (state.mode === 'typing') { exitTyping(draw); updateModeButtons(); return; }
       return;
     }
 
@@ -223,11 +283,11 @@ function initKeyboard() {
       case 'v': case 'V': applyTransform('V'); break;
       case 'f': case 'F': applyTransform('I'); break;
 
-      case 't': case 'T': enterTyping(draw); break;
-      case 'm': case 'M': cycleWriteMode(draw); break;
+      case 't': case 'T': enterTyping(draw); updateModeButtons(); break;
+      case 'm': case 'M': cycleWriteMode(draw); updateWriteButtons(); break;
 
       case 'g': case 'G':
-        state.showGrid = !state.showGrid; draw(); break;
+        state.showGrid = !state.showGrid; updateGridButton(); draw(); break;
       case '§':
         state.showPanel = !state.showPanel;
         document.getElementById('panel').style.display = state.showPanel ? '' : 'none';
@@ -245,6 +305,7 @@ function initKeyboard() {
 // ── Init ───────────────────────────────────────────────────────────────────
 
 export function initInput() {
+  initDrawing();
   initPan();
   initKeyboard();
 }

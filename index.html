@@ -3,92 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lbe</title>
+  <title>Untitled — Sigils</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
 
     <aside id="panel">
-      <div class="logo">lbe</div>
+      <div id="panel-resize"></div>
 
-      <div id="palette-section">
-        <div class="section-label">Characters</div>
-        <div id="palette-wrap">
-          <div id="palette-grid"></div>
+      <!-- FILE -->
+      <details id="file-section" open>
+        <summary>File</summary>
+        <div class="section-body">
+          <div class="panel-row">
+            <button id="btn-new">New</button>
+            <button id="btn-save">Save</button>
+            <button id="btn-save-as">Save As</button>
+            <button id="btn-load">Load</button>
+          </div>
+          <input id="file-input" type="file" accept=".lbe,.json" style="display:none" />
         </div>
-      </div>
+      </details>
 
-      <div id="colour-section">
-        <div class="section-label">Colour</div>
-        <div id="colour-grid"></div>
-      </div>
+      <!-- INFO -->
+      <details id="meta-section" open>
+        <summary>Info</summary>
+        <div class="section-body">
+          <div class="input-grid">
+            <label>Title</label>
+            <input id="meta-title"  type="text" placeholder="Untitled" />
+            <label>Artist</label>
+            <input id="meta-artist" type="text" />
+            <label>Group</label>
+            <input id="meta-group"  type="text" />
+          </div>
+        </div>
+      </details>
 
-      <div id="font-section">
-        <div class="section-label">Font</div>
-        <select id="font-select"></select>
-      </div>
+      <!-- EDIT -->
+      <details id="edit-section" open>
+        <summary>Edit</summary>
+        <div class="section-body">
 
-      <div id="canvas-section">
-        <div class="section-label">Canvas</div>
-        <div class="panel-row">
-          <label>W</label>
-          <input id="canvas-w" type="number" min="1" max="256" value="64" />
-          <label>H</label>
-          <input id="canvas-h" type="number" min="1" max="256" value="32" />
-          <button id="canvas-apply">Apply</button>
-        </div>
-        <div class="panel-row">
-          <button id="canvas-del-row">Del Row</button>
-          <button id="canvas-del-col">Del Col</button>
-        </div>
-      </div>
+          <!-- Canvas size -->
+          <div class="subsection-label">Canvas</div>
+          <div class="panel-row">
+            <label>W</label>
+            <input id="canvas-w" type="number" min="1" max="256" value="64" />
+            <label>H</label>
+            <input id="canvas-h" type="number" min="1" max="256" value="32" />
+            <button id="canvas-apply">Apply</button>
+            <button id="btn-clear">Clear</button>
+          </div>
+          <div class="panel-row">
+            <button id="canvas-add-row-before">↑ Row</button>
+            <button id="canvas-add-row-after">↓ Row</button>
+            <button id="canvas-del-row">✕ Row</button>
+          </div>
+          <div class="panel-row">
+            <button id="canvas-add-col-before">← Col</button>
+            <button id="canvas-add-col-after">→ Col</button>
+            <button id="canvas-del-col">✕ Col</button>
+          </div>
 
-      <div id="meta-section">
-        <div class="section-label">Info</div>
-        <div class="panel-row"><label>Title</label></div>
-        <div class="panel-row"><input id="meta-title"  type="text" placeholder="Untitled" /></div>
-        <div class="panel-row"><label>Artist</label></div>
-        <div class="panel-row"><input id="meta-artist" type="text" /></div>
-        <div class="panel-row"><label>Group</label></div>
-        <div class="panel-row"><input id="meta-group"  type="text" /></div>
-      </div>
+          <!-- Mode -->
+          <div class="subsection-label">Mode</div>
+          <div class="panel-row">
+            <div class="btn-group" id="mode-group">
+              <button id="btn-mode-tile"  class="active">Tile</button>
+              <button id="btn-mode-type">Type</button>
+            </div>
+          </div>
 
-      <div id="file-section">
-        <div class="section-label">File</div>
-        <div class="panel-row">
-          <button id="btn-new">New</button>
-          <button id="btn-save">Save</button>
-          <button id="btn-save-as">Save As</button>
-          <button id="btn-load">Load</button>
-        </div>
-        <input id="file-input" type="file" accept=".lbe,.json" />
+          <!-- Write mode -->
+          <div class="subsection-label">Write</div>
+          <div class="panel-row">
+            <div class="btn-group" id="write-group">
+              <button id="btn-write-both"   class="active">Both</button>
+              <button id="btn-write-char">Char</button>
+              <button id="btn-write-colour">Colour</button>
+            </div>
+          </div>
 
-        <div class="section-label" style="margin-top:10px">Export</div>
-        <div class="panel-row">
-          <label>Tile px</label>
-          <input id="export-tile-size" type="number" value="16" min="1" max="256" />
-          <span id="export-size-label">1024 × 512 px</span>
-        </div>
-        <div class="panel-row">
-          <button id="btn-export-png">Export PNG</button>
-        </div>
-      </div>
+          <!-- View -->
+          <div class="subsection-label">View</div>
+          <div class="panel-row">
+            <button id="btn-toggle-grid" class="active">Grid</button>
+          </div>
 
-      <div id="cmp-section">
-        <div class="section-label">Comparison Buffer</div>
-        <div class="panel-row">
-          <label>Size</label>
-          <input id="cmp-size" type="number" min="8" max="128" value="32" />
-          <label>px &nbsp; Tol.</label>
-          <input id="cmp-tol" type="number" min="1" max="50" value="10" />
-          <label>%</label>
+          <!-- Font -->
+          <div class="subsection-label">Font</div>
+          <div class="panel-row">
+            <select id="font-select"></select>
+          </div>
+
+          <!-- Characters -->
+          <div class="subsection-label">Characters</div>
+          <div id="palette-wrap">
+            <div id="palette-grid"></div>
+          </div>
+
+          <!-- Colours -->
+          <div class="subsection-label">Colours</div>
+          <div id="colour-grid"></div>
+
+          <!-- Comparison buffer (nested, collapsed) -->
+          <details id="cmp-section">
+            <summary>Comparison Buffer</summary>
+            <div class="section-body">
+              <div class="panel-row">
+                <label>Size px</label>
+                <input id="cmp-size" type="number" min="8" max="128" value="32" />
+                <label>Tol. %</label>
+                <input id="cmp-tol"  type="number" min="1" max="50"  value="10" />
+              </div>
+              <div class="panel-row">
+                <button id="cmp-rebuild">Rebuild</button>
+                <span id="cmp-status">–</span>
+              </div>
+            </div>
+          </details>
+
         </div>
-        <div class="panel-row">
-          <button id="cmp-rebuild">Rebuild</button>
-          <span id="cmp-status">–</span>
+      </details>
+
+      <!-- EXPORT -->
+      <details id="export-section" open>
+        <summary>Export</summary>
+        <div class="section-body">
+          <div class="panel-row">
+            <label>Tile px</label>
+            <input id="export-tile-size" type="number" value="16" min="1" max="256" />
+            <span id="export-size-label">1024 × 512 px</span>
+          </div>
+          <div class="panel-row">
+            <button id="btn-export-png">Export PNG</button>
+          </div>
         </div>
-      </div>
+      </details>
 
     </aside>
 
