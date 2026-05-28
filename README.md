@@ -1,4 +1,4 @@
-<img width="544" height="288" alt="sigils logo_32px_transparent" src="https://github.com/user-attachments/assets/8dccbe3b-a1db-4044-8a53-1bb6599378f2" />
+<img width="704" height="320" alt="sigils logo_64px_transparent" src="https://github.com/user-attachments/assets/75e0aa57-a640-4172-b560-535e32331bfd" />
 
 # sigils
 Keyboard-first vector-based textmode art editor
