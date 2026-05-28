@@ -37,6 +37,8 @@ import { ref, moveRef, changeOpacity,
          updateRefUI,
          refHitTest,
          startRefDrag }             from './ref.js';
+import { toggleHelp, closeHelp,
+         isHelpOpen }               from './help.js';
 
 
 // ── Zoom ───────────────────────────────────────────────────────────────────
@@ -203,6 +205,10 @@ function initKeyboard() {
   window.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    // ── Help overlay ───────────────────────────────────────────────────────
+    if (e.key === '?') { toggleHelp(); return; }
+    if (e.key === 'Escape' && isHelpOpen()) { closeHelp(); return; }
 
     const { cursor, palCursor } = state;
 

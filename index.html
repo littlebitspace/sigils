@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Untitled — Sigils</title>
   <link rel="stylesheet" href="style.css" />
-
   <link rel="icon" type="image/png" href="/fav/favicon-96x96.png?v=20260530" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/fav/favicon.svg?v=20260530" />
   <link rel="shortcut icon" href="/fav/favicon.ico?v=20260530" />
@@ -32,7 +31,6 @@
           <input id="file-input" type="file" accept=".lbe,.json" style="display:none" />
         </div>
       </details>
-
       <!-- INFO -->
       <details id="meta-section" open>
         <summary>Info</summary>
@@ -179,12 +177,100 @@
         </div>
       </details>
 
+      <div style="margin-top: auto; padding-top: 12px;">
+        <button id="btn-help">? Help</button>
+      </div>
+
     </aside>
 
     <div id="canvas-wrap">
       <canvas id="canvas"></canvas>
     </div>
 
+  </div>
+
+  <!-- Help overlay -->
+  <div id="help-overlay">
+    <div id="help-dialog">
+      <button id="help-close">✕</button>
+      <h2>Sigils — Keyboard Shortcuts</h2>
+      <div class="help-grid">
+
+        <div class="help-group">
+          <h3>File</h3>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>N</kbd></span><span class="help-desc">New file</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>S</kbd></span><span class="help-desc">Save</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>S</kbd></span><span class="help-desc">Save as</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>O</kbd></span><span class="help-desc">Open file</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>Z</kbd></span><span class="help-desc">Undo</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Ctrl</kbd><kbd>Y</kbd></span><span class="help-desc">Redo</span></div>
+          <div class="help-row"><span class="help-key"><kbd>?</kbd></span><span class="help-desc">This help screen</span></div>
+          <div class="help-row"><span class="help-key"><kbd>§</kbd></span><span class="help-desc">Toggle panel</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Navigation</h3>
+          <div class="help-row"><span class="help-key"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="help-desc">Move cursor</span></div>
+          <div class="help-row"><span class="help-key"><kbd>⇧</kbd><kbd>W/A/S/D</kbd></span><span class="help-desc">Pan canvas</span></div>
+          <div class="help-row"><span class="help-key"><kbd>+</kbd> / <kbd>-</kbd></span><span class="help-desc">Zoom in / out</span></div>
+          <div class="help-row"><span class="help-key">Scroll wheel</span><span class="help-desc">Zoom</span></div>
+          <div class="help-row"><span class="help-key">Middle drag</span><span class="help-desc">Pan</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Drawing</h3>
+          <div class="help-row"><span class="help-key"><kbd>E</kbd></span><span class="help-desc">Place tile</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Q</kbd></span><span class="help-desc">Erase tile</span></div>
+          <div class="help-row"><span class="help-key">Left click / drag</span><span class="help-desc">Place</span></div>
+          <div class="help-row"><span class="help-key">Right click / drag</span><span class="help-desc">Erase</span></div>
+          <div class="help-row"><span class="help-key"><kbd>T</kbd></span><span class="help-desc">Enter typing mode</span></div>
+          <div class="help-row"><span class="help-key"><kbd>M</kbd></span><span class="help-desc">Cycle write mode</span></div>
+          <div class="help-row"><span class="help-key"><kbd>G</kbd></span><span class="help-desc">Toggle grid</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Esc</kbd></span><span class="help-desc">Exit typing mode</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Palette</h3>
+          <div class="help-row"><span class="help-key"><kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd></span><span class="help-desc">Move cursor</span></div>
+          <div class="help-row"><span class="help-key"><kbd>R</kbd><kbd>H</kbd><kbd>V</kbd><kbd>F</kbd></span><span class="help-desc">Rotate / flip / invert</span></div>
+          <div class="help-row"><span class="help-key"><kbd>1</kbd>–<kbd>4</kbd></span><span class="help-desc">Cycle fg colour col</span></div>
+          <div class="help-row"><span class="help-key"><kbd>⇧</kbd><kbd>1</kbd>–<kbd>4</kbd></span><span class="help-desc">Cycle bg colour col</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Selection</h3>
+          <div class="help-row"><span class="help-key"><kbd>⇧</kbd> + Arrows</span><span class="help-desc">Extend selection</span></div>
+          <div class="help-row"><span class="help-key"><kbd>C</kbd></span><span class="help-desc">Copy selection</span></div>
+          <div class="help-row"><span class="help-key"><kbd>X</kbd></span><span class="help-desc">Cut selection</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Q</kbd></span><span class="help-desc">Delete selection</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Esc</kbd></span><span class="help-desc">Clear selection</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Float</h3>
+          <div class="help-row"><span class="help-key"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / Arrows</span><span class="help-desc">Move</span></div>
+          <div class="help-row"><span class="help-key">Left drag</span><span class="help-desc">Move</span></div>
+          <div class="help-row"><span class="help-key"><kbd>E</kbd></span><span class="help-desc">Stamp (stays active)</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Q</kbd></span><span class="help-desc">Erase under float</span></div>
+          <div class="help-row"><span class="help-key"><kbd>R</kbd><kbd>H</kbd><kbd>V</kbd><kbd>F</kbd></span><span class="help-desc">Rotate / flip / invert</span></div>
+          <div class="help-row"><span class="help-key"><kbd>M</kbd></span><span class="help-desc">Cycle write mode</span></div>
+          <div class="help-row"><span class="help-key">Right click / <kbd>Esc</kbd></span><span class="help-desc">Discard</span></div>
+        </div>
+
+        <div class="help-group">
+          <h3>Reference Image</h3>
+          <div class="help-row"><span class="help-key"><kbd>B</kbd></span><span class="help-desc">Show / hide</span></div>
+          <div class="help-row"><span class="help-key"><kbd>P</kbd></span><span class="help-desc">Enter ref edit mode</span></div>
+          <div class="help-row"><span class="help-key"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="help-desc">Move image</span></div>
+          <div class="help-row"><span class="help-key"><kbd>J</kbd> / <kbd>L</kbd></span><span class="help-desc">Scale down / up</span></div>
+          <div class="help-row"><span class="help-key"><kbd>I</kbd> / <kbd>K</kbd></span><span class="help-desc">Opacity up / down</span></div>
+          <div class="help-row"><span class="help-key">Drag centre</span><span class="help-desc">Move image</span></div>
+          <div class="help-row"><span class="help-key">Drag edge</span><span class="help-desc">Scale image</span></div>
+          <div class="help-row"><span class="help-key"><kbd>Esc</kbd></span><span class="help-desc">Exit ref mode</span></div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <div id="status">

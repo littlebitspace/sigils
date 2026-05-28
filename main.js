@@ -31,6 +31,7 @@ import { updateCanvasSizeInputs,
 import { checkAutosave }              from './autosave.js';
 import { initRef }                    from './ref.js';
 import { draw as drawFn }             from './draw.js';
+import { initHelp }                   from './help.js';
 
 
 document.getElementById('btn-clear').addEventListener('click', () => {
@@ -100,6 +101,7 @@ draw();
 initIO();
 initCompare();
 initRef(drawFn);
+initHelp();
 initInput();
 initPanelResize();
 updateTitleBar();

@@ -339,3 +339,113 @@ input[type="range"] {
   vertical-align: middle;
   margin-right: 3px;
 }
+
+/* ── Help overlay ── */
+#help-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  align-items: center;
+  justify-content: center;
+}
+#help-overlay.open {
+  display: flex;
+}
+
+#help-dialog {
+  background: #161616;
+  border: 1px solid #333;
+  width: min(820px, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px 28px 28px;
+  position: relative;
+  color: var(--text);
+  font-family: monospace;
+}
+
+#help-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+#help-close:hover { color: var(--text); background: none; }
+
+#help-dialog h2 {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+  font-weight: normal;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px 32px;
+}
+
+.help-group h3 {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-weight: normal;
+  border-bottom: 1px solid #222;
+  padding-bottom: 4px;
+}
+
+.help-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 10px;
+}
+
+.help-key {
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.help-key kbd {
+  display: inline-block;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-bottom-width: 2px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-size: 9px;
+  border-radius: 3px;
+  color: var(--text);
+}
+
+.help-desc {
+  color: var(--text-dim);
+  font-size: 10px;
+  text-align: right;
+}
+
+#btn-help {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 2px 4px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+#btn-help:hover { color: var(--text); background: none; }
