@@ -10,7 +10,7 @@ export const doc = {
   group:    '',
   font:     'petscii',
   delay:    500,
-  dirty:    false,   // unsaved changes flag
+  dirty:    false,
 };
 
 export const state = {
@@ -25,10 +25,11 @@ export const state = {
   showPanel: true,
   fgColRow:  new Uint8Array(4),
   bgColRow:  new Uint8Array(4),
-  mode:      'tile',       // 'tile' | 'typing'
-  writeMode: 'both',       // 'both' | 'char' | 'colour'
+  mode:      'tile',
+  writeMode: 'both',
   typing:    { startCol: 0 },
-  selection: null,
+  selection: null,   // { anchorCol, anchorRow, cursorCol, cursorRow }
+  floatSel:  null,   // { tiles, fg, cols, rows, col, row }
 };
 
 
@@ -51,7 +52,6 @@ export function updateTitleBar() {
 
 
 // ── Cursor blink ───────────────────────────────────────────────────────────
-// drawFn passed in to avoid circular dep: draw.js → state.js → draw.js
 
 export let cursorVisible = true;
 let blinkInterval        = null;

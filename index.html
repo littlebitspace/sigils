@@ -125,6 +125,34 @@
             </div>
           </details>
 
+          <!-- Reference image (nested, collapsed) -->
+          <details id="ref-section">
+            <summary>Reference Image</summary>
+            <div class="section-body">
+              <div class="panel-row">
+                <button id="btn-ref-visible" class="active">Show</button>
+                <button id="btn-ref-edit">Edit (P)</button>
+              </div>
+              <div class="panel-row">
+                <input id="ref-url" type="text" placeholder="https://…" style="flex:1;min-width:0" />
+                <button id="btn-ref-url">Load</button>
+              </div>
+              <div class="panel-row">
+                <button id="btn-ref-upload">Upload</button>
+                <input id="ref-file-input" type="file" accept="image/*" style="display:none" />
+              </div>
+              <div class="panel-row">
+                <label>Opacity</label>
+                <input id="ref-opacity" type="range" min="0" max="100" step="1" value="50" style="flex:1" />
+              </div>
+              <div class="panel-row">
+                <label>Scale</label>
+                <span id="ref-scale-label">100%</span>
+                <span class="dim">(I/K to adjust)</span>
+              </div>
+            </div>
+          </details>
+
         </div>
       </details>
 
@@ -139,6 +167,7 @@
           </div>
           <div class="panel-row">
             <button id="btn-export-png">Export PNG</button>
+            <button id="btn-export-png-transparent">Transparent</button>
           </div>
         </div>
       </details>

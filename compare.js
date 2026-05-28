@@ -1,6 +1,5 @@
 // compare.js
 // ── Tile comparison buffers ────────────────────────────────────────────────
-// Rasterises tiles to pixel buffers for transform-based palette navigation.
 
 import { TOTAL_TILES, PALETTE_COLS } from './constants.js';
 import { state }                     from './state.js';
@@ -104,30 +103,37 @@ function bufsMatch(a, b, threshold) {
   return true;
 }
 
-export function applyTransform(name) {
-  if (!cmp.ready) return;
-  const srcIdx = state.palCursor.row * PALETTE_COLS + state.palCursor.col;
-  const srcBuf = cmp.bufs[srcIdx];
-  if (!srcBuf) return;
+// Find the tile index whose compare buffer best matches the transformed buf.
+// Returns the original tileIdx if no match found.
+export function findTransformedTile(tileIdx, transformName) {
+  if (!cmp.ready) return tileIdx;
+  const srcBuf = cmp.bufs[tileIdx];
+  if (!srcBuf) return tileIdx;
   const S = cmp.size;
   let transformed;
-  switch (name) {
+  switch (transformName) {
     case 'R': transformed = bufRotate90CCW(srcBuf, S); break;
     case 'H': transformed = bufFlipH(srcBuf, S);       break;
     case 'V': transformed = bufFlipV(srcBuf, S);       break;
     case 'I': transformed = bufInvert(srcBuf);         break;
-    default: return;
+    default: return tileIdx;
   }
   const threshold = Math.ceil(cmp.tolerance / 100 * S * S);
   for (let i = 0; i < TOTAL_TILES; i++) {
     if (!cmp.bufs[i]) continue;
-    if (bufsMatch(transformed, cmp.bufs[i], threshold)) {
-      state.palCursor.col = i % PALETTE_COLS;
-      state.palCursor.row = Math.floor(i / PALETTE_COLS);
-      updatePaletteCursor();
-      return;
-    }
+    if (bufsMatch(transformed, cmp.bufs[i], threshold)) return i;
   }
+  return tileIdx;  // no match — keep original
+}
+
+// Move palette cursor to transformed version of currently selected tile
+export function applyTransform(name) {
+  if (!cmp.ready) return;
+  const srcIdx  = state.palCursor.row * PALETTE_COLS + state.palCursor.col;
+  const newIdx  = findTransformedTile(srcIdx, name);
+  state.palCursor.col = newIdx % PALETTE_COLS;
+  state.palCursor.row = Math.floor(newIdx / PALETTE_COLS);
+  updatePaletteCursor();
 }
 
 

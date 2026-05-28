@@ -14,7 +14,14 @@ import { saveFile, saveFileAs,
 import { placeTile, eraseTile,
          backspaceTile,
          extendSelection,
-         clearSelection }            from './editor.js';
+         clearSelection,
+         deleteSelection,
+         copySelection,
+         cutSelection,
+         moveFloat,
+         stampFloat,
+         discardFloat,
+         transformFloat }            from './editor.js';
 import { setFg, setBg,
          updatePaletteCursor }       from './palette.js';
 import { fontMeta }                  from './font.js';
@@ -23,6 +30,12 @@ import { draw, resizeCanvas }        from './draw.js';
 import { updateModeButtons,
          updateWriteButtons,
          updateGridButton }          from './ui.js';
+import { ref, moveRef, changeOpacity,
+         scaleRef, toggleRefVisible,
+         toggleRefEditing,
+         updateRefUI,
+         refHitTest,
+         startRefDrag }             from './ref.js';
 
 
 // ── Zoom ───────────────────────────────────────────────────────────────────
@@ -48,13 +61,13 @@ function setZoom(idx, originX, originY) {
 // ── Canvas coordinate → grid cell ──────────────────────────────────────────
 
 function canvasToCell(clientX, clientY) {
-  const rect  = canvas.getBoundingClientRect();
+  const rect   = canvas.getBoundingClientRect();
   const scaleX = canvas.width  / rect.width;
   const scaleY = canvas.height / rect.height;
-  const cx    = (clientX - rect.left) * scaleX;
-  const cy    = (clientY - rect.top)  * scaleY;
-  const col   = Math.floor((cx - state.pan.x) / (CELL_PX * state.zoom));
-  const row   = Math.floor((cy - state.pan.y) / (CELL_PX * state.zoom));
+  const cx     = (clientX - rect.left) * scaleX;
+  const cy     = (clientY - rect.top)  * scaleY;
+  const col    = Math.floor((cx - state.pan.x) / (CELL_PX * state.zoom));
+  const row    = Math.floor((cy - state.pan.y) / (CELL_PX * state.zoom));
   return { col, row };
 }
 
@@ -62,10 +75,27 @@ function canvasToCell(clientX, clientY) {
 // ── Mouse drawing ──────────────────────────────────────────────────────────
 
 function initDrawing() {
-  let painting  = null;   // 'place' | 'erase' | null
+  let painting   = null;   // 'place' | 'erase' | null
+  let refDragFn  = null;   // active ref drag move handler
 
   canvas.addEventListener('mousedown', e => {
+    // ── Ref edit mode mouse ──────────────────────────────────────────────
+    if (ref.editing && ref.img) {
+      const rect   = canvas.getBoundingClientRect();
+      const scaleX = canvas.width  / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const sx = (e.clientX - rect.left) * scaleX;
+      const sy = (e.clientY - rect.top)  * scaleY;
+      const hit = refHitTest(sx, sy);
+      if (hit) {
+        refDragFn = startRefDrag(sx, sy, draw);
+        e.preventDefault();
+        return;
+      }
+    }
+
     if (e.button === 0 && !e.shiftKey && !e.altKey) {
+      if (state.floatSel) { stampFloat(); return; }
       painting = 'place';
       const { col, row } = canvasToCell(e.clientX, e.clientY);
       state.cursor.col = col;
@@ -73,6 +103,7 @@ function initDrawing() {
       placeTile();
       e.preventDefault();
     } else if (e.button === 2) {
+      if (state.floatSel) { discardFloat(); return; }
       painting = 'erase';
       const { col, row } = canvasToCell(e.clientX, e.clientY);
       state.cursor.col = col;
@@ -83,9 +114,17 @@ function initDrawing() {
   });
 
   window.addEventListener('mousemove', e => {
+    if (refDragFn) {
+      const rect   = canvas.getBoundingClientRect();
+      const scaleX = canvas.width  / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const sx = (e.clientX - rect.left) * scaleX;
+      const sy = (e.clientY - rect.top)  * scaleY;
+      refDragFn(sx, sy);
+      return;
+    }
     if (!painting) return;
     const { col, row } = canvasToCell(e.clientX, e.clientY);
-    // Only act if cursor actually moved to a new cell
     if (col === state.cursor.col && row === state.cursor.row) return;
     state.cursor.col = col;
     state.cursor.row = row;
@@ -94,6 +133,7 @@ function initDrawing() {
   });
 
   window.addEventListener('mouseup', e => {
+    if (refDragFn) { refDragFn = null; return; }
     if (e.button === 0 || e.button === 2) painting = null;
   });
 
@@ -140,7 +180,7 @@ function initKeyboard() {
 
     const { cursor, palCursor } = state;
 
-    // ── Ctrl shortcuts — always active ────────────────────────────────────
+    // ── Ctrl shortcuts ─────────────────────────────────────────────────────
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z') { e.preventDefault(); undo(); return; }
       if (e.key === 'y') { e.preventDefault(); redo(); return; }
@@ -153,15 +193,60 @@ function initKeyboard() {
       }
     }
 
-    // ── Escape ────────────────────────────────────────────────────────────
+    // ── Escape ─────────────────────────────────────────────────────────────
     if (e.key === 'Escape') {
+      if (ref.editing)     { toggleRefEditing(); draw(); return; }
+      if (state.floatSel)  { discardFloat(); return; }
       if (state.selection) { clearSelection(); return; }
       if (state.mode === 'typing') { exitTyping(draw); updateModeButtons(); return; }
       return;
     }
 
-    // ── Shift+Arrows — extend selection ───────────────────────────────────
-    if (e.shiftKey) {
+    // ── Global B/P shortcuts ───────────────────────────────────────────────
+    if (e.key === 'b' || e.key === 'B') { toggleRefVisible(); draw(); return; }
+    if (e.key === 'p' || e.key === 'P') { toggleRefEditing(); draw(); return; }
+
+    // ── Ref edit mode ──────────────────────────────────────────────────────
+    if (ref.editing) {
+      switch (e.key) {
+        case 'w': case 'W': e.preventDefault(); moveRef( 0, -1); draw(); return;
+        case 's': case 'S': e.preventDefault(); moveRef( 0,  1); draw(); return;
+        case 'a': case 'A': e.preventDefault(); moveRef(-1,  0); draw(); return;
+        case 'd': case 'D': e.preventDefault(); moveRef( 1,  0); draw(); return;
+        case 'ArrowUp':     e.preventDefault(); moveRef( 0, -1); draw(); return;
+        case 'ArrowDown':   e.preventDefault(); moveRef( 0,  1); draw(); return;
+        case 'ArrowLeft':   e.preventDefault(); moveRef(-1,  0); draw(); return;
+        case 'ArrowRight':  e.preventDefault(); moveRef( 1,  0); draw(); return;
+        case 'i': case 'I': changeOpacity( 0.05); draw(); return;
+        case 'k': case 'K': changeOpacity(-0.05); draw(); return;
+        case 'j': case 'J': scaleRef(-0.05); draw(); return;
+        case 'l': case 'L': scaleRef( 0.05); draw(); return;
+      }
+      return;
+    }
+
+    // ── Float mode ─────────────────────────────────────────────────────────
+    if (state.floatSel) {
+      switch (e.key) {
+        case 'a': case 'A': e.preventDefault(); moveFloat(-1,  0); return;
+        case 'd': case 'D': e.preventDefault(); moveFloat( 1,  0); return;
+        case 'w': case 'W': e.preventDefault(); moveFloat( 0, -1); return;
+        case 's': case 'S': e.preventDefault(); moveFloat( 0,  1); return;
+        case 'ArrowLeft':   e.preventDefault(); moveFloat(-1,  0); return;
+        case 'ArrowRight':  e.preventDefault(); moveFloat( 1,  0); return;
+        case 'ArrowUp':     e.preventDefault(); moveFloat( 0, -1); return;
+        case 'ArrowDown':   e.preventDefault(); moveFloat( 0,  1); return;
+        case 'e': case 'E': stampFloat(); return;
+        case 'r': case 'R': transformFloat('R'); return;
+        case 'h': case 'H': transformFloat('H'); return;
+        case 'v': case 'V': transformFloat('V'); return;
+        case 'i': case 'I': transformFloat('I'); return;
+      }
+      return;  // swallow all other keys in float mode
+    }
+
+    // ── Selecting mode (shift+arrows active) ───────────────────────────────
+    if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
       switch (e.key) {
         case 'ArrowLeft':  e.preventDefault(); extendSelection(-1,  0); return;
         case 'ArrowRight': e.preventDefault(); extendSelection( 1,  0); return;
@@ -170,7 +255,16 @@ function initKeyboard() {
       }
     }
 
-    // ── Number keys 1-4: fg / bg colour (tile mode only) ──────────────────
+    // ── Selection actions ──────────────────────────────────────────────────
+    if (state.selection) {
+      switch (e.key) {
+        case 'q': case 'Q': deleteSelection(); return;
+        case 'c': case 'C': if (!e.ctrlKey) { copySelection(); return; } break;
+        case 'x': case 'X': if (!e.ctrlKey) { cutSelection();  return; } break;
+      }
+    }
+
+    // ── Number keys 1-4: fg / bg colour ───────────────────────────────────
     if (state.mode !== 'typing') {
       const codeMatch = e.code.match(/^Digit([1-4])$/);
       if (codeMatch) {
@@ -188,7 +282,7 @@ function initKeyboard() {
       }
     }
 
-    // ── Typing mode ───────────────────────────────────────────────────────
+    // ── Typing mode ────────────────────────────────────────────────────────
     if (state.mode === 'typing') {
       switch (e.key) {
         case 'ArrowLeft':
@@ -233,7 +327,7 @@ function initKeyboard() {
       }
     }
 
-    // ── Tile mode shortcuts ───────────────────────────────────────────────
+    // ── Tile mode shortcuts ────────────────────────────────────────────────
     const PAN_STEP = Math.round(CELL_PX * state.zoom * 4);
 
     switch (e.key) {

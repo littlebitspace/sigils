@@ -29,6 +29,8 @@ import { updateCanvasSizeInputs,
          updateGridButton,
          initGridEditButtons }        from './ui.js';
 import { checkAutosave }              from './autosave.js';
+import { initRef }                    from './ref.js';
+import { draw as drawFn }             from './draw.js';
 
 
 document.getElementById('btn-clear').addEventListener('click', () => {
@@ -97,6 +99,7 @@ centreGrid();
 draw();
 initIO();
 initCompare();
+initRef(drawFn);
 initInput();
 initPanelResize();
 updateTitleBar();

@@ -237,7 +237,7 @@ export function clearCanvas() {
 }
 // Rasterises fresh SVGs at the target tile size onto an offscreen canvas.
 
-export async function exportPng(tileSize) {
+export async function exportPng(tileSize, transparent = false) {
   const { cols, rows, tile, fg } = grid;
   const W = cols * tileSize;
   const H = rows * tileSize;
@@ -247,9 +247,11 @@ export async function exportPng(tileSize) {
   offscreen.height = H;
   const octx = offscreen.getContext('2d');
 
-  // Fill background
-  octx.fillStyle = PETSCII[state.bgIndex].hex;
-  octx.fillRect(0, 0, W, H);
+  // Fill background (skip for transparent export)
+  if (!transparent) {
+    octx.fillStyle = PETSCII[state.bgIndex].hex;
+    octx.fillRect(0, 0, W, H);
+  }
 
   // Render each tile at full resolution
   const promises = [];
@@ -261,14 +263,17 @@ export async function exportPng(tileSize) {
       const src     = tileSvgSource[tileIdx];
       if (!src) continue;
 
-      const coloured = src
-        .replace(/FGCOLOR/g, PETSCII[fgIdx].hex)
-        .replace(/<svg([^>]*)>/, `<svg$1><rect width="100%" height="100%" fill="${PETSCII[state.bgIndex].hex}"/>`);
+      // For transparent export, don't inject bg rect into SVG
+      const coloured = transparent
+        ? src.replace(/FGCOLOR/g, PETSCII[fgIdx].hex)
+        : src
+            .replace(/FGCOLOR/g, PETSCII[fgIdx].hex)
+            .replace(/<svg([^>]*)>/, `<svg$1><rect width="100%" height="100%" fill="${PETSCII[state.bgIndex].hex}"/>`);
 
-      const blob    = new Blob([coloured], { type: 'image/svg+xml' });
-      const url     = URL.createObjectURL(blob);
-      const x       = c * tileSize;
-      const y       = r * tileSize;
+      const blob = new Blob([coloured], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const x    = c * tileSize;
+      const y    = r * tileSize;
 
       promises.push(new Promise(resolve => {
         const img = new Image(tileSize, tileSize);
@@ -285,12 +290,12 @@ export async function exportPng(tileSize) {
 
   await Promise.all(promises);
 
-  // Export
+  const suffix = transparent ? `_${tileSize}px_transparent` : `_${tileSize}px`;
   offscreen.toBlob(blob => {
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
     a.href    = url;
-    a.download = (doc.title || 'untitled') + `_${tileSize}px.png`;
+    a.download = (doc.title || 'untitled') + suffix + '.png';
     a.click();
     URL.revokeObjectURL(url);
   }, 'image/png');
@@ -317,7 +322,14 @@ export function initIO() {
     const tileSize = Math.max(1, Math.min(256,
       parseInt(document.getElementById('export-tile-size').value) || 16
     ));
-    exportPng(tileSize);
+    exportPng(tileSize, false);
+  });
+
+  document.getElementById('btn-export-png-transparent').addEventListener('click', () => {
+    const tileSize = Math.max(1, Math.min(256,
+      parseInt(document.getElementById('export-tile-size').value) || 16
+    ));
+    exportPng(tileSize, true);
   });
 
   // Image size preview
