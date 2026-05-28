@@ -3,13 +3,13 @@
   "short_name": "Sigils",
   "icons": [
     {
-      "src": "/fav/web-app-manifest-192x192.png?v=20260528",
+      "src": "/fav/web-app-manifest-192x192.png?v=20260529",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/fav/web-app-manifest-512x512.png?v=20260528",
+      "src": "/fav/web-app-manifest-512x512.png?v=20260529",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
