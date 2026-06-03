@@ -26,7 +26,7 @@ let currentFileHandle = null;
 const FILE_OPTS = {
   types: [{
     description: 'LBE file',
-    accept: { 'application/json': ['.lbe'] },
+    accept: { 'application/json': ['.sgl'] },
   }],
 };
 
@@ -112,7 +112,7 @@ export async function saveFile() {
 export async function saveFileAs() {
   if (!window.showSaveFilePicker) {
     // Fallback: download
-    _downloadJson(buildSaveData(), (doc.title || 'untitled') + '.lbe');
+    _downloadJson(buildSaveData(), (doc.title || 'untitled') + '.sgl');
     markClean();
     clearAutosave();
     return;
@@ -120,7 +120,7 @@ export async function saveFileAs() {
   try {
     const handle = await window.showSaveFilePicker({
       ...FILE_OPTS,
-      suggestedName: (doc.title || 'untitled') + '.lbe',
+      suggestedName: (doc.title || 'untitled') + '.sgl',
     });
     currentFileHandle = handle;
     await _writeToHandle(handle);
