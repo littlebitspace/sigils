@@ -22,7 +22,9 @@ import { placeTile, eraseTile,
          stampFloat,
          discardFloat,
          eraseUnderFloat,
-         transformFloat }            from './editor.js';
+         transformFloat,
+         inBounds,
+         cellIndex }                 from './editor.js';
 import { setFg, setBg,
          updatePaletteCursor }       from './palette.js';
 import { fontMeta }                  from './font.js';
@@ -408,6 +410,17 @@ function initKeyboard() {
 
       case 'e': case 'E': placeTile(); break;
       case 'q': case 'Q': eraseTile(); break;
+      case 'c': case 'C': {
+        if (e.ctrlKey) break;
+        const { col, row } = state.cursor;
+        if (inBounds(col, row)) {
+          const tileIdx = grid.tile[cellIndex(col, row)];
+          state.palCursor.col = tileIdx % PALETTE_COLS;
+          state.palCursor.row = Math.floor(tileIdx / PALETTE_COLS);
+          updatePaletteCursor();
+        }
+        break;
+      }
 
       case 'r': case 'R': applyTransform('R'); break;
       case 'h': case 'H': applyTransform('H'); break;
